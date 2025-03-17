@@ -42,7 +42,7 @@ fun AlertDialogCustom(
                     onConfirmation()
                 }
             ) {
-                Text("Confirm")
+                Text("Aceptar")
             }
         },
         dismissButton = {
@@ -51,7 +51,7 @@ fun AlertDialogCustom(
                     onDismissRequest()
                 }
             ) {
-                Text("Dismiss")
+                Text("Cancelar")
             }
         }
     )

@@ -67,11 +67,12 @@ fun IncomeScreen(navController: NavController) {
     val bd = AppDatabase.getInstance(context = context)
     val transactionDao = bd.transactionDao()
     val coroutineScope = rememberCoroutineScope()
+    val selectedDate = remember { mutableStateOf(LocalDate.now()) }
 
     val viewModel: TransactionViewModel = viewModel(
         factory = TransactionViewModel.TransactionViewModelFactory(transactionDao)
     )
-    val incomeByCategory by viewModel.getIncomeByCategory().collectAsState(initial = emptyMap())
+    val incomeByCategory by viewModel.getIncomeByCategory(selectedDate.value.monthValue,selectedDate.value.year).collectAsState(initial = emptyMap())
     MaterialTheme {
         Scaffold(
             topBar = {
@@ -115,7 +116,7 @@ fun IncomeScreen(navController: NavController) {
                     color = MaterialTheme.colorScheme.primary
                 )
 
-                val selectedDate = remember { mutableStateOf(LocalDate.now()) }
+
                 DatePickerExample(selectedDate,Color(0xED99E2BB))
 
                 val concepto = remember { mutableStateOf("") }

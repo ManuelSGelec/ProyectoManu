@@ -25,15 +25,18 @@ import kotlinx.coroutines.flow.map
 class TransactionViewModel(private val transactionDao: TransactionDao) : ViewModel() {
     // LiveData para observar cambios en el balance
     private var _balance = MutableLiveData<datosBanlance>()
-    var balance: LiveData<datosBanlance> =  _balance
+    var balance: LiveData<datosBanlance> = _balance
     var allTransactions = listOf<TransactionModel>()
+    private var currentYear: Int = LocalDate.now().year
+    private var currentMonth: Int = LocalDate.now().monthValue
 
 
     init {
-       loadTransactions()
+        loadTransactions()
     }
 
-    class TransactionViewModelFactory(private val transactionDao: TransactionDao) : ViewModelProvider.Factory {
+    class TransactionViewModelFactory(private val transactionDao: TransactionDao) :
+        ViewModelProvider.Factory {
         @RequiresApi(Build.VERSION_CODES.O)
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(TransactionViewModel::class.java)) {
@@ -45,13 +48,13 @@ class TransactionViewModel(private val transactionDao: TransactionDao) : ViewMod
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun loadTransactions( ) {
+    private fun loadTransactions() {
         viewModelScope.launch {
             // Si transactionDao.getAllTransactions() devuelve un Flow
             transactionDao.getAllTransactions().collect { transactions ->
                 allTransactions = transactions
-               filterTransactions(LocalDate.now().year, LocalDate.now().monthValue)
-             //   _balance.value = calculateBalance(transactions)
+                filterTransactions(currentYear, currentMonth)
+                //   _balance.value = calculateBalance(transactions)
 
             }
         }
@@ -59,14 +62,17 @@ class TransactionViewModel(private val transactionDao: TransactionDao) : ViewMod
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun filterTransactions(year: Int, month: Int) {
-        Log.d("- - - >","$allTransactions")
+        currentYear = year
+        currentMonth = month
+        Log.d("- - - >", "$allTransactions")
         viewModelScope.launch {
             val filteredTransactions = allTransactions.filter { transaction ->
-                val transactionDate = LocalDate.parse(transaction.date, DateTimeFormatter.ISO_LOCAL_DATE)
-                Log.d("años ",transactionDate.year.toString())
-                Log.d("mes ",transactionDate.monthValue.toString())
-                Log.d("filtoraños ",year.toString())
-                Log.d("filtromes ",month.toString())
+                val transactionDate =
+                    LocalDate.parse(transaction.date, DateTimeFormatter.ISO_LOCAL_DATE)
+                Log.d("años ", transactionDate.year.toString())
+                Log.d("mes ", transactionDate.monthValue.toString())
+                Log.d("filtoraños ", year.toString())
+                Log.d("filtromes ", month.toString())
                 transactionDate.year == year && transactionDate.monthValue == month
             }
 
@@ -89,7 +95,7 @@ class TransactionViewModel(private val transactionDao: TransactionDao) : ViewMod
         //crear lista con todas las trasacciones
 
         val expenseItems = transactions.map { transaction ->
-            ExpenseItem(transaction.description, transaction.amount,transaction.id)
+            ExpenseItem(transaction.description, transaction.amount, transaction.id)
         }
 
         return datosBanlance(
@@ -102,24 +108,40 @@ class TransactionViewModel(private val transactionDao: TransactionDao) : ViewMod
     }
 
 
-    val listincomen = listOf( "Ventas","Sueldo","Inversiones","Donaciones","Premios","Otros")
-    fun getIncomeByCategory(): Flow<Map<String, Double>> {
+    val listincomen = listOf("Ventas", "Sueldo", "Inversiones", "Donaciones", "Premios", "Otros")
+    fun getIncomeByCategory(mes: Int, anyo: Int): Flow<Map<String, Double>> {
         return transactionDao.getAllTransactionsByType("income").map { transactions ->
-            transactions.groupBy { listincomen[it.category_id] }.mapValues { (_, transactions) ->
-               transactions.sumOf { it.amount }
+            transactions.filter { transaction ->
+            val transactionDate = LocalDate.parse(transaction.date, DateTimeFormatter.ISO_LOCAL_DATE)
+            transactionDate.monthValue == mes && transactionDate.year == anyo
+        }.groupBy { listincomen[it.category_id] }.mapValues { (_, transactions) ->
+                transactions.sumOf { it.amount }
             }
         }
     }
-    val listexpense = listOf( "Compras_Online","Hogar","restaurante","Transporte","Salud","Deporte","Educación","Otros")
 
-    fun getExpenseByCategory(): Flow<Map<String, Double>> {
+    val listexpense = listOf(
+        "Compras Online",
+        "Hogar",
+        "restaurante",
+        "Transporte",
+        "Salud",
+        "Deporte",
+        "Educación",
+        "Otros"
+    )
+
+    fun getExpenseByCategory(mes: Int, anyo: Int): Flow<Map<String, Double>> {
         return transactionDao.getAllTransactionsByType("expense").map { transactions ->
-            transactions.groupBy { listexpense[it.category_id]}.mapValues { (_, transactions) ->
-                transactions.sumOf { it.amount * -1  }
+            transactions.filter { transaction ->
+                val transactionDate =
+                    LocalDate.parse(transaction.date, DateTimeFormatter.ISO_LOCAL_DATE)
+                transactionDate.monthValue == mes && transactionDate.year == anyo
+            }.groupBy { listexpense[it.category_id] }.mapValues { (_, transactions) ->
+                transactions.sumOf { it.amount * -1 }
             }
         }
     }
-
 
 
 }

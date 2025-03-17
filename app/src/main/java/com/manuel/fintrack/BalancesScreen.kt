@@ -192,13 +192,13 @@ fun BalanceScreen(navController: NavController, id: Int) {
                     title = "Gastos",
                     amount = expenses,
                     isIncome = false,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f).height(80.dp)
                 )
             }
 
             // Lista de transacciones
             Card(
-                modifier = Modifier.fillMaxWidth().heightIn(max = 240.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(max = 230.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(

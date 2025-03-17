@@ -73,7 +73,8 @@ fun ExpenceScreen(navController: NavController) {
     val viewModel: TransactionViewModel = viewModel(
         factory = TransactionViewModel.TransactionViewModelFactory(transactionDao)
     )
-    val expenseByCategory by viewModel.getExpenseByCategory().collectAsState(initial = emptyMap())
+    val selectedDate = remember { mutableStateOf(LocalDate.now()) }
+    val expenseByCategory by viewModel.getExpenseByCategory(selectedDate.value.monthValue,selectedDate.value.year).collectAsState(initial = emptyMap())
     MaterialTheme {
         Scaffold(
             topBar = {
@@ -117,7 +118,7 @@ fun ExpenceScreen(navController: NavController) {
                     color = MaterialTheme.colorScheme.primary
                 )
 
-                val selectedDate = remember { mutableStateOf(LocalDate.now()) }
+
                 DatePickerExample(selectedDate,Color(0xEDE87A94))
 
 
